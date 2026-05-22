@@ -1,5 +1,5 @@
 app = "bonus17bot"
-primary_region = "dxb"
+primary_region = "ams"
 
 [build]
 
