@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs');
 
-const TOKEN = '8820397344:AAG9JiF-pj-BT_qbC3stisDgi2wTzFGUdZ4';
+const TOKEN = 'YOUR_BOT_TOKEN';
 const ADMIN_ID = 6139009028;
 
 const bot = new TelegramBot(TOKEN, { polling: true });
@@ -10,17 +10,14 @@ const bot = new TelegramBot(TOKEN, { polling: true });
    نظام حفظ المستخدمين دائم
 ========================= */
 
-// إنشاء الملف إذا غير موجود
 if (!fs.existsSync('users.json')) {
   fs.writeFileSync('users.json', '[]');
 }
 
-// تحميل المستخدمين
 let users = new Set(
   JSON.parse(fs.readFileSync('users.json'))
 );
 
-// إضافة مستخدم جديد
 function addUser(chatId) {
   if (!users.has(chatId)) {
     users.add(chatId);
@@ -50,6 +47,8 @@ const mainMenu = {
 const bonusMenu = {
   inline_keyboard: [
     [{ text: '🏢 شركة إنزو - بونص ترحيبي 30$', callback_data: 'bonus_inzo' }],
+    [{ text: '🏦 PRIME X - بونص ترحيبي 30$', callback_data: 'bonus_primex' }],
+    [{ text: '🎁 Finotive - بونص ترحيبي 50$', callback_data: 'bonus_finotive50' }],
     [{ text: '🔙 رجوع', callback_data: 'back_main' }]
   ]
 };
@@ -65,6 +64,8 @@ const offersMenu = {
 const profitMenu = {
   inline_keyboard: [
     [{ text: '🦊 بوت FoxiGrow لربح USDT', callback_data: 'profit_foxi' }],
+    [{ text: '🎡 تطبيق Beet لربح 28$', callback_data: 'profit_beet' }],
+    [{ text: '💎 Gemgala - كل إحالة 1$', callback_data: 'profit_gemgala' }],
     [{ text: '🔙 رجوع', callback_data: 'back_main' }]
   ]
 };
@@ -90,7 +91,13 @@ bot.onText(/\/start/, (msg) => {
 
   bot.sendMessage(
     chatId,
-    `👋 *أهلاً ${name}!*\n\nمرحباً بك في بوت *Bonus17* 🎯\n\n👥 عدد مستخدمين البوت: *${users.size}*\n\nاختر من القائمة أدناه 👇`,
+    `👋 *أهلاً ${name}!*
+
+مرحباً بك في بوت *Bonus17* 🎯
+
+👥 عدد مستخدمين البوت: *${users.size}*
+
+اختر من القائمة أدناه 👇`,
     {
       parse_mode: 'Markdown',
       ...mainMenu
@@ -110,7 +117,9 @@ bot.onText(/\/stats/, (msg) => {
 
   bot.sendMessage(
     msg.chat.id,
-    `📊 *إحصائيات البوت*\n\n👥 عدد المستخدمين الكلي: *${users.size}*`,
+    `📊 *إحصائيات البوت*
+
+👥 عدد المستخدمين الكلي: *${users.size}*`,
     { parse_mode: 'Markdown' }
   );
 });
@@ -225,6 +234,39 @@ bot.on('callback_query', (query) => {
 
   }
 
+  else if (data === 'bonus_primex') {
+
+    edit(
+`🏦 *شركة PRIME X - بونص ترحيبي 30$*
+
+1️⃣ لازم تحقق 10 لوت
+2️⃣ أقل سحب 100$
+
+✅ عدهم IP قوي
+🔥 البونص لفترة محدودة
+
+🔗 [سجل من هنا](https://my.primexcapital.com/ar/links/go/507)`,
+
+      [[{ text: '🔙 رجوع', callback_data: 'back_bonus' }]]
+    );
+
+  }
+
+  else if (data === 'bonus_finotive50') {
+
+    edit(
+`🎁 *تسجيل مسبق على بونص ترحيبي 50$ من شركة Finotive*
+
+• المعلومات غير متوفرة حالياً
+🔥 البونص لفترة محدودة
+
+🔗 [سجل من هنا](https://promo.finotivemarkets.com)`,
+
+      [[{ text: '🔙 رجوع', callback_data: 'back_bonus' }]]
+    );
+
+  }
+
   else if (data === 'offer_tnks') {
 
     edit(
@@ -264,6 +306,44 @@ bot.on('callback_query', (query) => {
 • الحد الأدنى للسحب 2 USDT
 
 🔗 [انضم من هنا](https://t.me/FoxiGrowbot?start=ref_6139009028)`,
+
+      [[{ text: '🔙 رجوع', callback_data: 'back_profit' }]]
+    );
+
+  }
+
+  else if (data === 'profit_beet') {
+
+    edit(
+`🎡 *تطبيق Beet لربح 28$*
+
+• يعتمد على الإحالات
+• تحتاج تفر العجلة 31 مرة لربح 28$
+• كل إحالة تعطيك فرّة عجلة
+• وإذا الشخص يدخل غرفة ويأخذ مايك 15 دقيقة هم تنطيك فرّة
+
+✅ السحب مضمون
+
+🆔 رمز الإحالة:
+\`590972593\`
+
+🔗 [سجل من هنا](https://os8.me/4f4Ct5)`,
+
+      [[{ text: '🔙 رجوع', callback_data: 'back_profit' }]]
+    );
+
+  }
+
+  else if (data === 'profit_gemgala') {
+
+    edit(
+`💎 *تطبيق Gemgala - كل إحالة 1$*
+
+• الفكرة بسيطة
+• كل إحالة تنطيك 1$
+• لازم الشخص يسوي تحقق وجه حتى تتحسب الإحالة
+
+🔗 [سجل من هنا](https://getblock.me/u/25458073)`,
 
       [[{ text: '🔙 رجوع', callback_data: 'back_profit' }]]
     );
