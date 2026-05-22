@@ -1,11 +1,10 @@
 const TelegramBot = require('node-telegram-bot-api');
 
 const TOKEN = '8820397344:AAG9JiF-pj-BT_qbC3stisDgi2wTzFGUdZ4';
-const ADMIN_ID = 123456789; // غير هذا الرقم لـ ID تيليغرام الخاص فيك
+const ADMIN_ID = 6139009028;
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 
-// تتبع المستخدمين
 const users = new Set();
 
 const mainMenu = {
@@ -29,7 +28,7 @@ const bonusMenu = {
 const offersMenu = {
   inline_keyboard: [
     [{ text: '📈 TNKS - بونص على إيداع 100%', callback_data: 'offer_tnks' }],
-    [{ text: '📊 ITS Pros - بونص على إيداع 100%', callback_data: 'offer_its' }],
+    [{ text: '📊 ITS Pros - بونص على الإيداع 100%', callback_data: 'offer_its' }],
     [{ text: '🔙 رجوع', callback_data: 'back_main' }]
   ]
 };
@@ -38,7 +37,6 @@ bot.onText(/\/start/, (msg) => {
   const name = msg.from.first_name || 'صديقي';
   const chatId = msg.chat.id;
   users.add(chatId);
-
   bot.sendMessage(
     chatId,
     `👋 *أهلاً ${name}!*\n\nمرحباً بك في بوت *Bonus17* 🎯\n\nاختر من القائمة أدناه 👇`,
@@ -46,7 +44,6 @@ bot.onText(/\/start/, (msg) => {
   );
 });
 
-// أمر للمشرف لمعرفة الإحصائيات
 bot.onText(/\/stats/, (msg) => {
   if (msg.chat.id === ADMIN_ID) {
     bot.sendMessage(msg.chat.id,
@@ -56,7 +53,6 @@ bot.onText(/\/stats/, (msg) => {
   }
 });
 
-// أمر للمشرف لمعرفة ID الخاص فيه
 bot.onText(/\/myid/, (msg) => {
   bot.sendMessage(msg.chat.id, `🆔 ID الخاص فيك: \`${msg.chat.id}\``, { parse_mode: 'Markdown' });
 });
