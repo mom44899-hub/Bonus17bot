@@ -1,1 +1,14 @@
+app = "bonus17bot"
+primary_region = "dxb"
+
+[build]
+
+[env]
+
+[[services]]
+  internal_port = 8080
+  protocol = "tcp"
+
+[processes]
+  app = "node index.js"
 
