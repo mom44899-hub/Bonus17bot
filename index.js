@@ -1,13 +1,19 @@
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs');
 
-const TOKEN = 8820397344:'AAEd9GQBhJHTcwW7oak-KF3kHH70SRiUra8';
+/* =========================
+   معلومات البوت
+========================= */
+
+const TOKEN = '8820397344:AAEd9GQBhJHTcwW7oak-KF3kHH70SRiUra8';
 const ADMIN_ID = 6139009028;
 
-const bot = new TelegramBot(TOKEN, { polling: true });
+const bot = new TelegramBot(TOKEN, {
+  polling: true
+});
 
 /* =========================
-   نظام حفظ المستخدمين
+   حفظ المستخدمين
 ========================= */
 
 if (!fs.existsSync('users.json')) {
@@ -19,7 +25,9 @@ let users = new Set(
 );
 
 function addUser(chatId) {
+
   if (!users.has(Number(chatId))) {
+
     users.add(Number(chatId));
 
     fs.writeFileSync(
@@ -30,29 +38,40 @@ function addUser(chatId) {
 }
 
 /* =========================
-   إرسال رسالة جماعية
+   البث
 ========================= */
 
 async function broadcast(message) {
+
   let success = 0;
   let failed = 0;
 
   for (const userId of users) {
+
     try {
-      await bot.sendMessage(userId, message, {
-        parse_mode: 'Markdown'
-      });
+
+      await bot.sendMessage(
+        userId,
+        message,
+        {
+          parse_mode: 'Markdown'
+        }
+      );
 
       success++;
 
       await new Promise(r => setTimeout(r, 50));
 
     } catch (e) {
+
       failed++;
     }
   }
 
-  return { success, failed };
+  return {
+    success,
+    failed
+  };
 }
 
 /* =========================
@@ -70,36 +89,91 @@ const mainMenu = {
 
 const bonusMenu = {
   inline_keyboard: [
-    [{ text: '🆕 Exclusive Markets - بونص 20$', callback_data: 'bonus_exclusive' }],
-    [{ text: '🏢 شركة إنزو - بونص 30$', callback_data: 'bonus_inzo' }],
-    [{ text: '🏦 PRIME X - بونص 30$', callback_data: 'bonus_primex' }],
-    [{ text: '🎁 Finotive - بونص 50$', callback_data: 'bonus_finotive50' }],
-    [{ text: '🔙 رجوع', callback_data: 'back_main' }]
+
+    [{
+      text: '🏢 شركة إنزو - بونص 30$',
+      callback_data: 'bonus_inzo'
+    }],
+
+    [{
+      text: '🏦 PRIME X - بونص 30$',
+      callback_data: 'bonus_primex'
+    }],
+
+    [{
+      text: '🎁 Finotive - بونص 50$',
+      callback_data: 'bonus_finotive50'
+    }],
+
+    [{
+      text: '🔙 رجوع',
+      callback_data: 'back_main'
+    }]
   ]
 };
 
 const offersMenu = {
   inline_keyboard: [
-    [{ text: '📈 TNKS - بونص إيداع 100%', callback_data: 'offer_tnks' }],
-    [{ text: '📊 ITS Pros - بونص إيداع 100%', callback_data: 'offer_its' }],
-    [{ text: '🔙 رجوع', callback_data: 'back_main' }]
+
+    [{
+      text: '📈 TNKS - بونص إيداع 100%',
+      callback_data: 'offer_tnks'
+    }],
+
+    [{
+      text: '📊 ITS Pros - بونص إيداع 100%',
+      callback_data: 'offer_its'
+    }],
+
+    [{
+      text: '🔙 رجوع',
+      callback_data: 'back_main'
+    }]
   ]
 };
 
 const profitMenu = {
   inline_keyboard: [
-    [{ text: '🦊 FoxiGrow', callback_data: 'profit_foxi' }],
-    [{ text: '🎡 Beet', callback_data: 'profit_beet' }],
-    [{ text: '💎 Gemgala', callback_data: 'profit_gemgala' }],
-    [{ text: '🔙 رجوع', callback_data: 'back_main' }]
+
+    [{
+      text: '🦊 FoxiGrow',
+      callback_data: 'profit_foxi'
+    }],
+
+    [{
+      text: '🎡 Beet',
+      callback_data: 'profit_beet'
+    }],
+
+    [{
+      text: '💎 Gemgala',
+      callback_data: 'profit_gemgala'
+    }],
+
+    [{
+      text: '🔙 رجوع',
+      callback_data: 'back_main'
+    }]
   ]
 };
 
 const fundingMenu = {
   inline_keyboard: [
-    [{ text: '💼 WE MASTER TRADE', callback_data: 'fund_wmt' }],
-    [{ text: '🆓 Finotive Funding', callback_data: 'fund_finotive' }],
-    [{ text: '🔙 رجوع', callback_data: 'back_main' }]
+
+    [{
+      text: '💼 WE MASTER TRADE',
+      callback_data: 'fund_wmt'
+    }],
+
+    [{
+      text: '🆓 Finotive Funding',
+      callback_data: 'fund_finotive'
+    }],
+
+    [{
+      text: '🔙 رجوع',
+      callback_data: 'back_main'
+    }]
   ]
 };
 
@@ -123,18 +197,19 @@ bot.on('message', async (msg) => {
     const name = msg.from.first_name || 'صديقي';
 
     return bot.sendMessage(
+
       chatId,
 
 `🎯 *مرحباً بك ${name}*
 
-🔥 بوت *Bonus17* الرسمي
+🔥 بوت *Bonus17*
 
 👥 *عدد مستخدمين البوت:* ${users.size}
 
-📌 يوفر لك:
+📌 الأقسام:
 🎁 بونصات ترحيبية
 💳 حسابات تمويل مجانية
-💰 مواقع وبوتات ربح مضمونة
+💰 مواقع ربح مضمونة
 
 اختر من القائمة أدناه 👇`,
 
@@ -150,10 +225,15 @@ bot.on('message', async (msg) => {
   if (text === '/stats') {
 
     if (chatId !== ADMIN_ID) {
-      return bot.sendMessage(chatId, '⛔ غير مسموح');
+
+      return bot.sendMessage(
+        chatId,
+        '⛔ غير مسموح'
+      );
     }
 
     return bot.sendMessage(
+
       chatId,
 
 `📊 *إحصائيات البوت*
@@ -174,6 +254,7 @@ bot.on('message', async (msg) => {
     if (chatId !== ADMIN_ID) return;
 
     return bot.sendMessage(
+
       chatId,
 
 `👥 *قائمة المستخدمين*
@@ -195,7 +276,9 @@ ${[...users].join('\n') || 'لا يوجد مستخدمين'}`,
     return bot.sendMessage(
       chatId,
       `🆔 ID: \`${chatId}\``,
-      { parse_mode: 'Markdown' }
+      {
+        parse_mode: 'Markdown'
+      }
     );
   }
 
@@ -207,11 +290,15 @@ ${[...users].join('\n') || 'لا يوجد مستخدمين'}`,
 
     const customMsg = text.slice('/broadcast '.length);
 
-    await bot.sendMessage(chatId, '⏳ جاري الإرسال...');
+    await bot.sendMessage(
+      chatId,
+      '⏳ جاري الإرسال...'
+    );
 
     const result = await broadcast(customMsg);
 
     return bot.sendMessage(
+
       chatId,
 
 `✅ تم الإرسال
@@ -225,7 +312,7 @@ ${[...users].join('\n') || 'لا يوجد مستخدمين'}`,
     );
   }
 
-  /* ===== تجاهل الأوامر ===== */
+  /* ===== تجاهل باقي الأوامر ===== */
 
   if (text.startsWith('/')) return;
 
@@ -294,22 +381,29 @@ bot.on('callback_query', (query) => {
 
   const edit = (text, keyboard) => {
 
-    bot.editMessageText(text, {
+    bot.editMessageText(
 
-      chat_id: chatId,
-      message_id: msgId,
-      parse_mode: 'Markdown',
-      disable_web_page_preview: true,
+      text,
 
-      reply_markup: {
-        inline_keyboard: keyboard
+      {
+        chat_id: chatId,
+        message_id: msgId,
+        parse_mode: 'Markdown',
+        disable_web_page_preview: true,
+
+        reply_markup: {
+          inline_keyboard: keyboard
+        }
       }
 
-    }).catch(() => {});
+    ).catch(() => {});
   };
 
   const backBonus = [
-    [{ text: '🔙 رجوع', callback_data: 'back_bonus' }]
+    [{
+      text: '🔙 رجوع',
+      callback_data: 'back_bonus'
+    }]
   ];
 
   switch (data) {
@@ -321,9 +415,120 @@ bot.on('callback_query', (query) => {
 `🏢 *شركة إنزو - بونص ترحيبي 30$*
 
 • البونص بدون شروط
-• أقل سحب 70$
+• الحد الأدنى للسحب 70$
 
 🔗 https://my.inzo.co/trading?referral=3336354&lang=ar`,
+
+        backBonus
+      );
+
+    case 'bonus_primex':
+
+      return edit(
+
+`🏦 *شركة PRIME X - بونص 30$*
+
+• تحقق 10 لوت
+• أقل سحب 100$
+
+🔗 https://my.primexcapital.com/ar/links/go/507`,
+
+        backBonus
+      );
+
+    case 'bonus_finotive50':
+
+      return edit(
+
+`🎁 *Finotive - بونص 50$*
+
+🔥 لفترة محدودة
+
+🔗 https://promo.finotivemarkets.com`,
+
+        backBonus
+      );
+
+    case 'offer_tnks':
+
+      return edit(
+
+`📈 *TNKS - بونص إيداع 100%*
+
+🔗 https://my.tnfx.co/register?referrer_id=294829&c=811366&utm_campaign=811366&ib_code=335002920`,
+
+        backBonus
+      );
+
+    case 'offer_its':
+
+      return edit(
+
+`📊 *ITS Pros - بونص إيداع 100%*
+
+🔗 https://ITCPros.com`,
+
+        backBonus
+      );
+
+    case 'profit_foxi':
+
+      return edit(
+
+`🦊 *FoxiGrow*
+
+💰 ربح USDT من المهام
+
+🔗 https://t.me/FoxiGrowbot?start=ref_6139009028`,
+
+        backBonus
+      );
+
+    case 'profit_beet':
+
+      return edit(
+
+`🎡 *Beet*
+
+🆔 كود الإحالة:
+\`590972593\`
+
+🔗 https://os8.me/4f4Ct5`,
+
+        backBonus
+      );
+
+    case 'profit_gemgala':
+
+      return edit(
+
+`💎 *Gemgala*
+
+💰 كل إحالة = 1$
+
+🔗 https://getblock.me/u/25458073`,
+
+        backBonus
+      );
+
+    case 'fund_wmt':
+
+      return edit(
+
+`💼 *WE MASTER TRADE*
+
+🔗 https://my.wemastertrade.com/register?ref=165977`,
+
+        backBonus
+      );
+
+    case 'fund_finotive':
+
+      return edit(
+
+`🆓 *Finotive Funding*
+
+🔗 https://finotivefunding.com/k6mENBY`,
 
         backBonus
       );
