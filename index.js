@@ -1,29 +1,41 @@
 const TelegramBot = require('node-telegram-bot-api');
-const fs = require('fs');
+const { MongoClient } = require('mongodb');
 
-const TOKEN = '8820397344:AAEd9GQBhJHTcwW7oak-KF3kHH70SRiUra8';
+const TOKEN = process.env.TOKEN || '8820397344:AAEd9GQBhJHTcwW7oak-KF3kHH70SRiUra8';
+const MONGO_URI = process.env.MONGO_URI;
 const ADMIN_ID = 6139009028;
 
 const bot = new TelegramBot(TOKEN, { polling: true });
 
 /* =========================
-   نظام حفظ المستخدمين دائم
+   MongoDB
 ========================= */
 
-if (!fs.existsSync('users.json')) {
-  fs.writeFileSync('users.json', '[]');
+let db;
+let usersCollection;
+let users = new Set();
+
+async function connectDB() {
+  const client = new MongoClient(MONGO_URI);
+  await client.connect();
+  db = client.db('bonus17bot');
+  usersCollection = db.collection('users');
+  console.log('✅ MongoDB متصل');
+
+  // تحميل كل المستخدمين من DB
+  const all = await usersCollection.find({}).toArray();
+  all.forEach(u => users.add(Number(u.chatId)));
+  console.log(`✅ تم تحميل ${users.size} مستخدم`);
 }
 
-let users = new Set(
-  JSON.parse(fs.readFileSync('users.json')).map(Number)
-);
-
-function addUser(chatId) {
-  if (!users.has(Number(chatId))) {
-    users.add(Number(chatId));
-    fs.writeFileSync(
-      'users.json',
-      JSON.stringify([...users], null, 2)
+async function addUser(chatId) {
+  const id = Number(chatId);
+  if (!users.has(id)) {
+    users.add(id);
+    await usersCollection.updateOne(
+      { chatId: id },
+      { $set: { chatId: id } },
+      { upsert: true }
     );
   }
 }
@@ -98,8 +110,7 @@ const fundingMenu = {
 };
 
 /* =========================
-   معالج الرسائل — مكان واحد فقط
-   ✅ هذا يمنع التكرار
+   معالج الرسائل
 ========================= */
 
 bot.on('message', async (msg) => {
@@ -108,19 +119,17 @@ bot.on('message', async (msg) => {
 
   if (!text) return;
 
-  addUser(chatId);
+  await addUser(chatId);
 
-  // ── /start ──
   if (text === '/start') {
     const name = msg.from.first_name || 'صديقي';
     return bot.sendMessage(
       chatId,
-      `👋 *أهلاً ${name}!*\n\nمرحباً بك في بوت *Bonus17* 🎯\n\n👥 عدد مستخدمين البوت: *${users.size}*\n\naختر من القائمة أدناه 👇`,
+      `👋 *أهلاً ${name}!*\n\nمرحباً بك في بوت *Bonus17* 🎯\n\n👥 عدد مستخدمين البوت: *${users.size}*\n\nاختر من القائمة أدناه 👇`,
       { parse_mode: 'Markdown', reply_markup: mainMenu }
     );
   }
 
-  // ── /stats ──
   if (text === '/stats') {
     if (chatId !== ADMIN_ID) return bot.sendMessage(chatId, '⛔ غير مسموح');
     return bot.sendMessage(
@@ -130,42 +139,31 @@ bot.on('message', async (msg) => {
     );
   }
 
-  // ── /myid ──
   if (text === '/myid') {
     return bot.sendMessage(chatId, `🆔 ID: \`${chatId}\``, { parse_mode: 'Markdown' });
   }
 
-  // ── /broadcast_bonus ──
   if (text === '/broadcast_bonus') {
     if (chatId !== ADMIN_ID) return;
     await bot.sendMessage(chatId, '⏳ جاري الإرسال...');
-    const result = await broadcast(
-      `🔔 *إشعار جديد من بوت Bonus17*\n\n🎁 تم إضافة *بونص ترحيبي جديد!*\n\nافتح البوت وتحقق من خانة 👉 *بونص ترحيبي*`
-    );
+    const result = await broadcast(`🔔 *إشعار جديد من بوت Bonus17*\n\n🎁 تم إضافة *بونص ترحيبي جديد!*\n\nافتح البوت وتحقق من خانة 👉 *بونص ترحيبي*`);
     return bot.sendMessage(chatId, `✅ تم الإرسال!\n✔️ نجح: ${result.success}\n❌ فشل: ${result.failed}`, { parse_mode: 'Markdown' });
   }
 
-  // ── /broadcast_funding ──
   if (text === '/broadcast_funding') {
     if (chatId !== ADMIN_ID) return;
     await bot.sendMessage(chatId, '⏳ جاري الإرسال...');
-    const result = await broadcast(
-      `🔔 *إشعار جديد من بوت Bonus17*\n\n💳 تم إضافة *حساب تمويل مجاني جديد!*\n\nافتح البوت وتحقق من خانة 👉 *حسابات تمويل مجانية*`
-    );
+    const result = await broadcast(`🔔 *إشعار جديد من بوت Bonus17*\n\n💳 تم إضافة *حساب تمويل مجاني جديد!*\n\nافتح البوت وتحقق من خانة 👉 *حسابات تمويل مجانية*`);
     return bot.sendMessage(chatId, `✅ تم الإرسال!\n✔️ نجح: ${result.success}\n❌ فشل: ${result.failed}`, { parse_mode: 'Markdown' });
   }
 
-  // ── /broadcast_profit ──
   if (text === '/broadcast_profit') {
     if (chatId !== ADMIN_ID) return;
     await bot.sendMessage(chatId, '⏳ جاري الإرسال...');
-    const result = await broadcast(
-      `🔔 *إشعار جديد من بوت Bonus17*\n\n💰 تم إضافة *موقع أو بوت ربح جديد!*\n\nافتح البوت وتحقق من خانة 👉 *مواقع وبوتات الربح المضمون*`
-    );
+    const result = await broadcast(`🔔 *إشعار جديد من بوت Bonus17*\n\n💰 تم إضافة *موقع أو بوت ربح جديد!*\n\nافتح البوت وتحقق من خانة 👉 *مواقع وبوتات الربح المضمون*`);
     return bot.sendMessage(chatId, `✅ تم الإرسال!\n✔️ نجح: ${result.success}\n❌ فشل: ${result.failed}`, { parse_mode: 'Markdown' });
   }
 
-  // ── /broadcast نص مخصص ──
   if (text.startsWith('/broadcast ')) {
     if (chatId !== ADMIN_ID) return;
     const customMsg = text.slice('/broadcast '.length);
@@ -174,41 +172,27 @@ bot.on('message', async (msg) => {
     return bot.sendMessage(chatId, `✅ تم الإرسال!\n✔️ نجح: ${result.success}\n❌ فشل: ${result.failed}`, { parse_mode: 'Markdown' });
   }
 
-  // ── تجاهل باقي الأوامر ──
   if (text.startsWith('/')) return;
 
-  // ── أزرار القائمة الرئيسية ──
   if (text === '🎁 بونص ترحيبي') {
-    return bot.sendMessage(chatId, '🎁 *اختر الشركة:*', {
-      parse_mode: 'Markdown',
-      reply_markup: bonusMenu
-    });
+    return bot.sendMessage(chatId, '🎁 *اختر الشركة:*', { parse_mode: 'Markdown', reply_markup: bonusMenu });
   }
 
   if (text === '🔥 عروض') {
-    return bot.sendMessage(chatId, '🔥 *اختر العرض:*', {
-      parse_mode: 'Markdown',
-      reply_markup: offersMenu
-    });
+    return bot.sendMessage(chatId, '🔥 *اختر العرض:*', { parse_mode: 'Markdown', reply_markup: offersMenu });
   }
 
   if (text === '💰 مواقع وبوتات الربح المضمون') {
-    return bot.sendMessage(chatId, '💰 *اختر:*', {
-      parse_mode: 'Markdown',
-      reply_markup: profitMenu
-    });
+    return bot.sendMessage(chatId, '💰 *اختر:*', { parse_mode: 'Markdown', reply_markup: profitMenu });
   }
 
   if (text === '💳 حسابات تمويل مجانية') {
-    return bot.sendMessage(chatId, '💳 *اختر الحساب:*', {
-      parse_mode: 'Markdown',
-      reply_markup: fundingMenu
-    });
+    return bot.sendMessage(chatId, '💳 *اختر الحساب:*', { parse_mode: 'Markdown', reply_markup: fundingMenu });
   }
 });
 
 /* =========================
-   الأزرار الداخلية (Inline)
+   الأزرار الداخلية
 ========================= */
 
 bot.on('callback_query', (query) => {
@@ -245,8 +229,7 @@ bot.on('callback_query', (query) => {
 • البونص لمدة شهر
 
 🔗 [اضغط هنا للتسجيل](https://linktr.ee/exclusive_markets?utm_source=ig&utm_medium=social&utm_content=link_in_bio&fbclid=PAZnRzaAR-MnJleHRuA2FlbQIxMQBzcnRjBmFwcF9pZA8xMjQwMjQ1NzQyODc0MTQAAadTwsUeqGrx1c2ZuT6MXaimj-AjTlCjZmva9_7afgwWITT_v9F-rTvt6Bitpw_aem_PP-moscLXqoABIrEmPMD0g)`,
-        backBonus
-      );
+        backBonus);
 
     case 'bonus_inzo':
       return edit(
@@ -256,8 +239,7 @@ bot.on('callback_query', (query) => {
 • الحد الأدنى للسحب 70$
 
 🔗 [اضغط هنا للتسجيل](https://my.inzo.co/trading?referral=3336354&lang=ar)`,
-        backBonus
-      );
+        backBonus);
 
     case 'bonus_primex':
       return edit(
@@ -270,8 +252,7 @@ bot.on('callback_query', (query) => {
 🔥 البونص لفترة محدودة
 
 🔗 [اضغط هنا للتسجيل](https://my.primexcapital.com/ar/links/go/507)`,
-        backBonus
-      );
+        backBonus);
 
     case 'bonus_finotive50':
       return edit(
@@ -281,8 +262,7 @@ bot.on('callback_query', (query) => {
 🔥 البونص لفترة محدودة
 
 🔗 [اضغط هنا للتسجيل](https://promo.finotivemarkets.com)`,
-        backBonus
-      );
+        backBonus);
 
     case 'offer_tnks':
       return edit(
@@ -292,8 +272,7 @@ bot.on('callback_query', (query) => {
 • فقط لدولة العراق وسوريا
 
 🔗 [اضغط هنا للتسجيل](https://my.tnfx.co/register?referrer_id=294829&c=811366&utm_campaign=811366&ib_code=335002920)`,
-        backOffers
-      );
+        backOffers);
 
     case 'offer_its':
       return edit(
@@ -302,8 +281,7 @@ bot.on('callback_query', (query) => {
 • شركة جديدة
 
 🔗 [اضغط هنا للتسجيل](https://ITCPros.com)`,
-        backOffers
-      );
+        backOffers);
 
     case 'profit_foxi':
       return edit(
@@ -314,8 +292,7 @@ bot.on('callback_query', (query) => {
 • الحد الأدنى للسحب 2 USDT
 
 🔗 [اضغط هنا للتسجيل](https://t.me/FoxiGrowbot?start=ref_6139009028)`,
-        backProfit
-      );
+        backProfit);
 
     case 'profit_beet':
       return edit(
@@ -332,8 +309,7 @@ bot.on('callback_query', (query) => {
 \`590972593\`
 
 🔗 [اضغط هنا للتسجيل](https://os8.me/4f4Ct5)`,
-        backProfit
-      );
+        backProfit);
 
     case 'profit_gemgala':
       return edit(
@@ -344,8 +320,7 @@ bot.on('callback_query', (query) => {
 • لازم الشخص يسوي تحقق وجه حتى تتحسب الإحالة
 
 🔗 [اضغط هنا للتسجيل](https://getblock.me/u/25458073)`,
-        backProfit
-      );
+        backProfit);
 
     case 'fund_wmt':
       return edit(
@@ -357,8 +332,7 @@ bot.on('callback_query', (query) => {
 • الاكسبيرت مسموح
 
 🔗 [اضغط هنا للتسجيل](https://my.wemastertrade.com/register?ref=165977)`,
-        backFunding
-      );
+        backFunding);
 
     case 'fund_finotive':
       return edit(
@@ -368,8 +342,7 @@ bot.on('callback_query', (query) => {
 • أكمل الاستطلاع واستلم الحساب
 
 🔗 [اضغط هنا للتسجيل](https://finotivefunding.com/k6mENBY)`,
-        backFunding
-      );
+        backFunding);
 
     case 'back_bonus':
       return edit('🎁 *اختر الشركة:*', bonusMenu.inline_keyboard);
@@ -396,4 +369,13 @@ bot.on('error', (err) => {
   console.error('bot error:', err.message);
 });
 
-console.log('✅ البوت يشتغل...');
+/* =========================
+   تشغيل البوت بعد الاتصال بـ MongoDB
+========================= */
+
+connectDB().then(() => {
+  console.log('✅ البوت يشتغل...');
+}).catch(err => {
+  console.error('❌ فشل الاتصال بـ MongoDB:', err.message);
+  process.exit(1);
+});
