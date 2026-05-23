@@ -1,7 +1,7 @@
 const TelegramBot = require('node-telegram-bot-api');
 const fs = require('fs');
 
-const TOKEN = process.env.TOKEN || 'PUT_NEW_TOKEN_HERE';
+const TOKEN = process.env.TOKEN || '8820397344:AAE7b6xGaNA47gNRlU12CP3mtgtp4anX3Cw';
 const ADMIN_ID = 6139009028;
 
 /* =========================
