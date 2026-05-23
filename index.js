@@ -15,12 +15,12 @@ if (!fs.existsSync('users.json')) {
 }
 
 let users = new Set(
-  JSON.parse(fs.readFileSync('users.json'))
+  JSON.parse(fs.readFileSync('users.json')).map(Number)
 );
 
 function addUser(chatId) {
-  if (!users.has(chatId)) {
-    users.add(chatId);
+  if (!users.has(Number(chatId))) {
+    users.add(Number(chatId));
     fs.writeFileSync(
       'users.json',
       JSON.stringify([...users], null, 2)
