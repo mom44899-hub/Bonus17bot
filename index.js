@@ -225,7 +225,7 @@ bot.on('callback_query', (query) => {
       parse_mode: 'Markdown',
       disable_web_page_preview: true,
       reply_markup: { inline_keyboard: keyboard }
-    });
+    }).catch(() => {});
   };
 
   const backBonus   = [[{ text: '🔙 رجوع', callback_data: 'back_bonus' }]];
@@ -384,8 +384,16 @@ bot.on('callback_query', (query) => {
       return edit('💳 *اختر الحساب:*', fundingMenu.inline_keyboard);
 
     case 'back_main':
-      return bot.deleteMessage(chatId, msgId);
+      return bot.deleteMessage(chatId, msgId).catch(() => {});
   }
+});
+
+bot.on('polling_error', (err) => {
+  console.error('polling error:', err.message);
+});
+
+bot.on('error', (err) => {
+  console.error('bot error:', err.message);
 });
 
 console.log('✅ البوت يشتغل...');
